@@ -1,16 +1,30 @@
-import { Action, ActionPanel, closeMainWindow, Icon, List, showToast, Toast } from "@raycast/api";
+import {
+  Action,
+  ActionPanel,
+  closeMainWindow,
+  Icon,
+  List,
+  openExtensionPreferences,
+  showToast,
+  Toast,
+} from "@raycast/api";
 import { usePromise } from "@raycast/utils";
+import { useEffect } from "react";
 import { readAllConnections } from "./lib/user-settings";
-import { AUTH_LABELS, findSsmsExe, openConnection } from "./lib/ssms";
+import { authLabel, findSsmsExe, openConnection } from "./lib/ssms";
 import type { SsmsConnection } from "./lib/types";
 
-function ConnectionListItem({ conn, exePath }: { conn: SsmsConnection; exePath: string }) {
-  const authLabel = AUTH_LABELS[conn.authMethod] ?? "Unknown";
-
+function ConnectionListItem({
+  conn,
+  exePath,
+}: {
+  conn: SsmsConnection;
+  exePath: string | null;
+}) {
   return (
     <List.Item
       title={conn.server}
-      subtitle={authLabel}
+      subtitle={authLabel(conn.authMethod)}
       keywords={[conn.server, conn.userName, conn.database ?? ""]}
       accessories={[
         conn.userName ? { text: conn.userName, icon: Icon.Person } : {},
@@ -18,14 +32,22 @@ function ConnectionListItem({ conn, exePath }: { conn: SsmsConnection; exePath: 
       ].filter((a) => a.text)}
       actions={
         <ActionPanel>
-          <Action
-            title="Open in SSMS"
-            icon={Icon.ArrowRight}
-            onAction={async () => {
-              openConnection(conn, exePath);
-              await closeMainWindow();
-            }}
-          />
+          {exePath ? (
+            <Action
+              title="Open in Ssms"
+              icon={Icon.ArrowRight}
+              onAction={async () => {
+                openConnection(conn, exePath);
+                await closeMainWindow();
+              }}
+            />
+          ) : (
+            <Action
+              title="Set Ssms Path in Preferences"
+              icon={Icon.Gear}
+              onAction={openExtensionPreferences}
+            />
+          )}
           <Action.CopyToClipboard
             title="Copy Server Name"
             content={conn.server}
@@ -46,19 +68,31 @@ function ConnectionListItem({ conn, exePath }: { conn: SsmsConnection; exePath: 
 
 export default function SearchConnections() {
   const exePath = findSsmsExe();
-  const { data: connections, isLoading, error } = usePromise(async () => readAllConnections());
+  const {
+    data: connections,
+    isLoading,
+    error,
+  } = usePromise(async () => readAllConnections());
 
-  if (error) {
-    showToast({ style: Toast.Style.Failure, title: "Failed to load connections", message: String(error) });
-  }
+  useEffect(() => {
+    if (error) {
+      showToast({
+        style: Toast.Style.Failure,
+        title: "Failed to load connections",
+        message: String(error),
+      });
+    }
+  }, [error]);
 
-  if (!exePath) {
-    showToast({
-      style: Toast.Style.Failure,
-      title: "SSMS not found",
-      message: "Set the path in extension preferences",
-    });
-  }
+  useEffect(() => {
+    if (!exePath) {
+      showToast({
+        style: Toast.Style.Failure,
+        title: "SSMS not found",
+        message: "Set the path in extension preferences",
+      });
+    }
+  }, [exePath]);
 
   return (
     <List isLoading={isLoading} searchBarPlaceholder="Search connections...">
@@ -66,7 +100,7 @@ export default function SearchConnections() {
         <ConnectionListItem
           key={`${conn.server}|${conn.userName}|${conn.database ?? ""}`}
           conn={conn}
-          exePath={exePath ?? ""}
+          exePath={exePath}
         />
       ))}
     </List>

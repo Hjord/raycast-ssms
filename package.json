@@ -1,8 +1,8 @@
 {
   "$schema": "https://www.raycast.com/schemas/extension.json",
   "name": "ssms",
-  "title": "SSMS",
-  "description": "Search and open your SQL Server Management Studio connections directly from Raycast. Reads recent connections from SSMS settings and launches with the right server and credentials.",
+  "title": "SSMS - SQL Server Management Studio",
+  "description": "Search and open your SQL Server Management Studio connections directly from Raycast.",
   "icon": "icon.png",
   "author": "hjord",
   "categories": ["Developer Tools"],

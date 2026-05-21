@@ -7,10 +7,20 @@ interface Preferences {
   ssmsPath?: string;
 }
 
+// Values match the SSMS connection dialog's authentication dropdown ordering.
 export const AUTH_LABELS: Record<number, string> = {
-  0: "Windows Auth",
-  1: "SQL Server Auth",
+  0: "Windows Authentication",
+  1: "SQL Server Authentication",
+  2: "Azure AD - Universal with MFA",
+  3: "Azure AD - Password",
+  4: "Azure AD - Integrated",
+  5: "Azure AD - Service Principal",
+  6: "Azure AD - Default",
 };
+
+export function authLabel(method: number): string {
+  return AUTH_LABELS[method] ?? `Auth method ${method}`;
+}
 
 const DEFAULT_PATHS = [
   "C:\\Program Files (x86)\\Microsoft SQL Server Management Studio 18\\Common7\\IDE\\Ssms.exe",
